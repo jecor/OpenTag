@@ -23,9 +23,9 @@
 
 int main(int argc, char **argv)
 {
-   if (argc < 3)
+   if (argc < 4)
    {
-      std::cerr << "usage: " << argv[0] << " inputtextfile outputcppfile" << std::endl;
+      std::cerr << "usage: " << argv[0] << " inputtextfile outputcppfile arrayname" << std::endl;
       return 1;
    }
    
@@ -42,28 +42,39 @@ int main(int argc, char **argv)
       return 2;
    }
    
-   outputFile << "const prog_uint16_t tramA[] PROGMEM = \n{ " << std::endl;
+   outputFile << "const prog_uint16_t " << argv[3] << "[] PROGMEM = \n{ " << std::endl;
    outputFile << "   ";
    
    std::string line;
    unsigned long lineCount = 0;
    unsigned int value;
    unsigned int indent = 0;
+   unsigned int arraySize = 0;
    
    while (std::getline(inputFile, line))
    {
       if ((lineCount % 3) == 0)
       {
+         if (lineCount != 0)
+         {
+            outputFile << ", ";
+            if (indent == 8)
+            {
+               indent = 0;
+               outputFile << std::endl << "   ";
+            }
+         }
          indent++;
+         arraySize++;
          if (line[1] == ':')
          {
             value = (line[0]-48)*60 + (line[2]-48)*10 + (line[3]-48);
-            outputFile << value << ", ";
+            outputFile << value;
          }
          else if (line[2] == ':')
          {
             value = (line[0]-48)*60*10 + (line[1]-48)*60 + (line[3]-48)*10 + (line[4]-48);
-            outputFile << value << ", ";
+            outputFile << value;
          }
          else
          {
@@ -73,14 +84,10 @@ int main(int argc, char **argv)
          }
       }
       lineCount++;
-      if (indent == 4)
-      {
-         indent = 0;
-         outputFile << std::endl << "   ";
-      }
    }
    
    outputFile << "\n};" << std::endl;
+   outputFile << "\nconst uint16_t " << argv[3] << "Size = " << arraySize << ";" << std::endl;
    
    return 0;
 }
